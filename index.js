@@ -14,6 +14,9 @@ const addBtn = document.getElementById("add-data");
 const inputBox = document.getElementById("input-box");
 let taskList = document.getElementById("task-list");
 const temporaryData = [];
+const inputImage = document.getElementById("input-image");
+const formSubmit = document.getElementById("form-submit");
+const payload = {};
 /**
  *
  * Events
@@ -25,26 +28,37 @@ const temporaryData = [];
  * Add Task
  *
  */
+formSubmit.addEventListener("submit", (e) => {
+  console.log("hello");
+  debugger;
+  e.preventDefault();
+  addTask(payload)
+    .then((res) => {
+      if (res === "task Added") {
+        renderData();
+        inputBox.value = "";
+      }
+    })
+    .catch((err) => {
+      console.log("task Error: " + err);
+    });
+});
 inputBox.addEventListener("change", (e) => {
-  if ((e.key = "Enter" && e.target.value)) {
-    const payload = {
+  if (e.target.value) {
+    Object.assign(payload, {
       id: Date.now(),
       task: e.target.value,
       isCompleted: false,
-    };
-
-    addTask(payload)
-      .then((res) => {
-        if (res === "task Added") {
-          renderData();
-          inputBox.value = "";
-        }
-      })
-      .catch((err) => {
-        console.log("task Error: " + err);
-      });
+    });
   }
+  console.log(payload);
 });
+inputImage.addEventListener("change", function () {
+  const file = inputImage.files;
+  Object.assign(payload, { ...payload, image: file });
+});
+
+const updateTask = () => {};
 
 const addTask = (payload) => {
   return new Promise((resolve, reject) => {
@@ -87,17 +101,27 @@ const renderData = () => {
   dataRetrievalIndexDB()
     .then((res) => {
       if (res?.length > 0) {
-        res.forEach(({ task, id, isCompleted }) => {
+        res.forEach(({ task, id, isCompleted, image }) => {
           let htmlList = document.createElement("li");
           let cancel = document.createElement("button");
+          let taskImage = document.createElement("img");
+          htmlList.style.display = "flex";
 
+          taskImage.src = URL.createObjectURL(image.length > 0 && image[0]);
+          taskImage.alt = "task-pic";
+          taskImage.style.height = "300px";
+          taskImage.style.width = "300px";
+          taskImage.style.objectFit = "cover";
+          taskImage.style.borderRadius = "10px";
           cancel.textContent = "x";
           cancel.addEventListener("click", () => {
             deleteTask(id);
           });
+
           htmlList.textContent = task;
 
           htmlList.appendChild(cancel);
+          htmlList.appendChild(taskImage);
           taskList.appendChild(htmlList);
         });
       }
